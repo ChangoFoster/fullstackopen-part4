@@ -10,26 +10,29 @@ const favouriteBlog = blogs => {
   return blogs.find(blog => blog.likes === maxLikes)
 }
 
-//Refactor as this looks a bit gnarly
 const mostBlogs = blogs => {
-  const authorArray = _.map(blogs, 'author')
-  const mostCommonAuthor = _.chain(authorArray).countBy().toPairs().max(_.last).value()
-  const formattedMostCommonAuthor = {
-    author: mostCommonAuthor[0],
-    blogs: mostCommonAuthor[1]
-  }
-  return formattedMostCommonAuthor
+  const blogsByAuthor = _(blogs)
+    .groupBy('author')
+    .map((array, key) => ({
+      'author': key,
+      'blogs': _.countBy(array, 'author')[key]
+    }))
+    .value()
+  const mostBlogsByAuthor = _.maxBy(blogsByAuthor, 'author')
+  return mostBlogsByAuthor
 }
 
 //Get list of authors and likes, reduce to author totals, select highest
 const mostLikes = blogs => {
-  const authorArray = _.map(blogs, 'likes')
-  const mostLikesAuthor = _.chain(authoArray).countBy().toPairs().max(_.last).value()
-  const formattedMostLikesAuthor = {
-    author: "Sam",
-    likes: mostLikesAuthor[1]
-  }
-  return formattedMostLikesAuthor
+  const likesByAuthor = _(blogs)
+        .groupBy('author')
+        .map((array, key) => ({
+            'author': key,
+            'likes': _.sumBy(array, 'likes')
+        }))
+        .value()
+  const mostLikesByAuthor = _.maxBy(likesByAuthor, 'likes')
+  return mostLikesByAuthor
 }
 
 module.exports = { dummy, totalLikes, favouriteBlog, mostBlogs, mostLikes }
