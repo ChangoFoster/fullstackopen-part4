@@ -22,7 +22,6 @@ const mostBlogs = blogs => {
   return mostBlogsByAuthor
 }
 
-//Get list of authors and likes, reduce to author totals, select highest
 const mostLikes = blogs => {
   const likesByAuthor = _(blogs)
         .groupBy('author')
