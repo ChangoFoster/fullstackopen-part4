@@ -3,8 +3,7 @@ const mongoose = require('mongoose')
 const blogSchema = mongoose.Schema({
   title: {
     type: String,
-    required: true,
-    minlength: 3
+    required: true
   },
   author: {
     type: String,

@@ -1,6 +1,9 @@
 const _ = require('lodash')
 
-const dummy = blogs =>  1
+const dummy = blogs =>  {
+  console.log(blogs)
+  return 1
+}
 
 const totalLikes = blogs => blogs
   .reduce((previous, current) => {return previous + current.likes}, 0)
@@ -24,12 +27,12 @@ const mostBlogs = blogs => {
 
 const mostLikes = blogs => {
   const likesByAuthor = _(blogs)
-        .groupBy('author')
-        .map((array, key) => ({
-            'author': key,
-            'likes': _.sumBy(array, 'likes')
-        }))
-        .value()
+    .groupBy('author')
+    .map((array, key) => ({
+      'author': key,
+      'likes': _.sumBy(array, 'likes')
+    }))
+    .value()
   const mostLikesByAuthor = _.maxBy(likesByAuthor, 'likes')
   return mostLikesByAuthor
 }
