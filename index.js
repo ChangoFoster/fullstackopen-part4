@@ -5,8 +5,8 @@ const logger = require('./utils/logger')
 
 const server = http.createServer(app)
 
-//Up to 4.14
-//Error handler needs to be fixed
+//TODO: Error handler needs to be fixed
+//TODO: Fix tests for exercise 4.22
 server.listen(config.PORT, () => {
   logger.info(`Server running on port ${config.PORT}`)
 })

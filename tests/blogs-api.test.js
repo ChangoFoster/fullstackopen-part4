@@ -93,7 +93,8 @@ describe('delete an existing blog', () => {
 })
 
 describe('addition of a new blog', () => {
-  test('a valid blog can be added', async () => {
+  test('a valid blog can be added with auth', async () => {
+
     const newBlog = {
       title:  'owl',
       author: 'me',
@@ -101,7 +102,8 @@ describe('addition of a new blog', () => {
       likes:  20
     }
 
-    await api.post('/api/blogs').send(newBlog)
+    await api.post('/api/blogs')
+      .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
