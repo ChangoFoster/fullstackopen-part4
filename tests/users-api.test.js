@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
@@ -10,7 +9,7 @@ describe('with one user in the db', () => {
   beforeEach(async () => {
     await User.deleteMany({})
 
-    const passwordHash = await bcrypt.hash('secret', 10)
+    const passwordHash = await helper.convertPasswordToHash('secret')
     const user = new User({ username: 'root', passwordHash })
 
     await user.save()

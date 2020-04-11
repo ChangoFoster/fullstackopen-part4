@@ -4,13 +4,28 @@ const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({})
+
+  const hash = await helper.convertPasswordToHash(helper.initialUser.password)
+  const user = new User({
+    username: helper.initialUser.username,
+    passwordHash: hash
+  })
+  await user.save()
+
+  const newUser = await User.findOne({ username: user.username })
+  helper.initialBlogs = helper.initialBlogs.map(blog => ({
+    ...blog,
+    user: newUser._id
+  }))
 
   const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
+  const blogPromiseArray = blogObjects.map(blog => blog.save())
+  await Promise.all(blogPromiseArray)
 })
 
 describe('when there are initially some blogs returned', () => {
@@ -27,7 +42,7 @@ describe('when there are initially some blogs returned', () => {
 
   test('the blog ids are defined', async () => {
     const response = await api.get('/api/blogs')
-    const ids = response.body.map(r => r.id)
+    const ids = response.body.map(result => result.id)
     expect(ids).toBeDefined()
   })
 })
@@ -41,7 +56,7 @@ describe('viewing a specific blog', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
 
-    expect(resultBlog.body).toEqual(blogToView)
+    expect(resultBlog.body.title).toEqual(blogToView.title)
   })
 
   test('fails with 404 if the blog does not exist', async () => {
@@ -72,22 +87,26 @@ describe('update a specific blog', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
 
-    expect(resultBlog.body).toEqual(blogToUpdate)
+    expect(resultBlog.body.likes).toEqual(newLikes)
   })
 })
 
 describe('delete an existing blog', () => {
-  test('a valid blog can be deleted', async () => {
+  test('a valid blog can be deleted with auth', async () => {
     const blogsAtStart = await helper.blogsInDb()
     const deleteBlog = blogsAtStart[0]
 
-    await api.delete(`/api/blogs/${deleteBlog.id}`)
+    const TOKEN = await helper.userToken(helper.initialUser.username)
+
+    await api
+      .delete(`/api/blogs/${deleteBlog.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
-    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
 
-    const titles = blogsAtEnd.map(r => r.title)
+    const titles = blogsAtEnd.map(blog => blog.title)
     expect(titles).not.toContain(deleteBlog.title)
   })
 })
@@ -95,15 +114,19 @@ describe('delete an existing blog', () => {
 describe('addition of a new blog', () => {
   test('a valid blog can be added with auth', async () => {
 
+    const TOKEN = await helper.userToken(helper.initialUser.username)
+
     const newBlog = {
       title:  'owl',
       author: 'me',
       url:  'www.news.com',
-      likes:  20
+      likes:  20,
     }
 
-    await api.post('/api/blogs')
+    await api
+      .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -111,17 +134,23 @@ describe('addition of a new blog', () => {
     expect(blogs).toHaveLength(helper.initialBlogs.length + 1)
 
     const titles = blogs.map(blog => blog.title)
-    expect(titles).toContainEqual('owl')
+    expect(titles).toContainEqual(newBlog.title)
   })
 
-  test('blog without likes defaults to 0', async () => {
+  test('blog with auth but without likes defaults to 0', async () => {
+
+    const TOKEN = await helper.userToken(helper.initialUser.username)
+
     const newBlog = {
       'title': 'donkey',
       'author': 'you',
       'url': 'www.you.com',
     }
 
-    await api.post('/api/blogs').send(newBlog)
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -132,17 +161,38 @@ describe('addition of a new blog', () => {
     expect(likes).toContainEqual(0)
   })
 
-  test('blog without title and url throws an error', async () => {
+  test('blog with auth but without title and url throws an error', async () => {
+
+    const TOKEN = await helper.userToken(helper.initialUser.username)
+
     const newBlog = {
       'author': 'you',
       'likes': 1
     }
 
-    await api.post('/api/blogs').send(newBlog)
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(400)
 
     const blogs = await helper.blogsInDb()
     expect(blogs).toHaveLength(helper.initialBlogs.length)
+  })
+
+  test('blog without auth throws 401', async () => {
+    const newBlog = {
+      title:  'owl',
+      author: 'me',
+      url:  'www.news.com',
+      likes:  20,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
   })
 })
 
