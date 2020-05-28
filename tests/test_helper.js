@@ -5,15 +5,15 @@ const User = require('../models/user')
 
 const initialBlogs = [
   {
-    'title': 'donkey',
-    'author': 'me',
+    'title': 'news article 1',
+    'author': 'author 1',
     'url': 'www.news.com',
     'likes': 1276,
     'user': {},
   },
   {
-    'title': 'monkey',
-    'author': 'meat',
+    'title': 'Another article',
+    'author': 'another author',
     'url': 'www.news.com.au',
     'likes': 1277,
     'user': {},

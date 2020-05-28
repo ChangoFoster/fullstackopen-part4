@@ -15,7 +15,7 @@ const unknownEndpoint = (request, response) => {
 const errorHandler = (error, request, response, next) => {
   logger.error(error.message)
   logger.info(request.headers)
-  //Broken somehow with error.kind
+  //Error.kind doesn't seem to be present in the error
   if (error.name === 'CastError' && error.path === '_id') {
     return response.status(400).send({ error: 'malformed id' })
   } else if (error.name === 'ValidationError') {

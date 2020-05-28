@@ -37,12 +37,14 @@ describe('when there are initially some blogs returned', () => {
 
   test('there are two blogs', async () => {
     const response = await api.get('/api/blogs')
+
     expect(response.body).toHaveLength(helper.initialBlogs.length)
   })
 
   test('the blog ids are defined', async () => {
     const response = await api.get('/api/blogs')
     const ids = response.body.map(result => result.id)
+
     expect(ids).toBeDefined()
   })
 })
@@ -138,7 +140,6 @@ describe('addition of a new blog', () => {
   })
 
   test('blog with auth but without likes defaults to 0', async () => {
-
     const TOKEN = await helper.userToken(helper.initialUser.username)
 
     const newBlog = {
@@ -162,7 +163,6 @@ describe('addition of a new blog', () => {
   })
 
   test('blog with auth but without title and url throws an error', async () => {
-
     const TOKEN = await helper.userToken(helper.initialUser.username)
 
     const newBlog = {
